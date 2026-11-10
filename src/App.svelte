@@ -1,7 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { promptForDay, recentDays } from './prompts';
-  import { paletteFrom, type Palette } from './palette';
+  import { paletteFrom, glassFrom, tintTextFrom, dangerTextFrom, type Palette, type Glass } from './palette';
+  import { t, setLanguage, currentLanguage } from './i18n/index.svelte';
   import { onPrefsChange } from './prefs-live';
 
   // Nomie passes the colours and text size of the app. The defaults only show when the plugin is opened outside Nomie.
@@ -9,6 +10,9 @@
   let view = $state<'modal' | 'widget'>('modal');
   let today = $state(new Date());
   let palette = $state<Palette>(paletteFrom(undefined));
+  let glass = $state<Glass>(glassFrom(undefined));
+  let tintText = $state(tintTextFrom(undefined));
+  let dangerText = $state(dangerTextFrom(undefined));
   let scale = $state(1);
 
   const prompt = $derived(promptForDay(today));
@@ -17,11 +21,15 @@
   const applyNomieValues = () => {
     if (!plugin?.prefs) return;
     palette = paletteFrom(plugin.prefs);
+    setLanguage(plugin.prefs?.language);
+    glass = glassFrom(plugin.prefs);
+    tintText = tintTextFrom(plugin.prefs);
+    dangerText = dangerTextFrom(plugin.prefs);
     scale = plugin.prefs.fontScale || 1;
     today = new Date();
   };
 
-  const writeDown = (text: string) => plugin.openNoteEditor(`Grateful for: ${text}\n`);
+  const writeDown = (text: string) => plugin.openNoteEditor(`${t('gratefulFor', { text })}\n`);
 
   onMount(() => {
     plugin = new NomiePlugin({
@@ -47,25 +55,25 @@
   });
 </script>
 
-<div class="card" class:widget={view === 'widget'} style="--page: {palette.page}; --card: {palette.card}; --text: {palette.text}; --muted: {palette.textSecondary}; --line: {palette.separator}; --tint: {palette.tint}; --on-tint: {palette.onTint}; --scale: {scale};">
+<div class="card" class:widget={view === 'widget'} style="--page: {palette.page}; --card: {palette.card}; --text: {palette.text}; --muted: {palette.textSecondary}; --line: {palette.separator}; --tint: {palette.tint}; --tint-text: {tintText}; --glass-fill: {glass.fill}; --glass-edge: {glass.edge}; --glass-blur: {glass.blur}; --glass-shadow: {glass.shadow}; --on-tint: {palette.onTint}; --scale: {scale};">
   {#if view === 'widget'}
     <button class="prompt-button" onclick={() => writeDown(prompt)}>
       <span class="emoji" aria-hidden="true">🙏</span>
       <span>{prompt}</span>
     </button>
   {:else}
-    <h1>Gratitude</h1>
-    <p class="muted">Today</p>
+    <header class="top"><h1>{t('title')}</h1></header>
+    <p class="muted">{t('today')}</p>
     <section class="panel">
       <p class="big">{prompt}</p>
-      <button class="primary" onclick={() => writeDown(prompt)}>Write it down</button>
+      <button class="primary" onclick={() => writeDown(prompt)}>{t('writeDown')}</button>
     </section>
 
-    <h2>The last seven days</h2>
+    <h2>{t('lastSeven')}</h2>
     <section class="panel list">
       {#each days as day (day.date.toDateString())}
         <button class="row" onclick={() => writeDown(day.prompt)}>
-          <span class="day">{day.date.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+          <span class="day">{day.date.toLocaleDateString(currentLanguage(), { weekday: 'short', day: 'numeric', month: 'short' })}</span>
           <span>{day.prompt}</span>
         </button>
       {/each}
@@ -74,6 +82,10 @@
 </div>
 
 <style>
+  /* the app's text: its iOS font stack (PLG-LF-07) */
+  :global(body) { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif; -webkit-font-smoothing: antialiased; --ios-font-rounded: ui-rounded, -apple-system, system-ui, sans-serif; }
+  /* the header is a Liquid Glass bar (D-glass): it stays at the top and the content scrolls under it */
+  .top { position: sticky; top: 0; z-index: 2; margin: -16px -16px 8px; padding: 16px 16px 10px; background: var(--glass-fill); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); border-bottom: 1px solid var(--glass-edge); }
   .card { box-sizing: border-box; min-height: 100vh; padding: 16px; background: var(--page); color: var(--text); font-size: calc(17px * var(--scale)); line-height: 1.4; }
   .card.widget { min-height: 0; padding: 12px; font-size: calc(15px * var(--scale)); }
   h1 { margin: 0 0 4px; font-size: calc(28px * var(--scale)); font-weight: 700; }

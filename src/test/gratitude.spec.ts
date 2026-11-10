@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PROMPTS, dayOfYear, promptForDay, recentDays } from '../prompts';
+import { PROMPT_COUNT, dayOfYear, promptForDay, recentDays } from '../prompts';
 
 describe('the gratitude prompts', () => {
   it('counts the day of the year from 0 on 1 January', () => {
@@ -12,7 +12,7 @@ describe('the gratitude prompts', () => {
   });
 
   it('repeats after the last prompt', () => {
-    expect(promptForDay(new Date(2026, 0, 1 + PROMPTS.length))).toBe(promptForDay(new Date(2026, 0, 1)));
+    expect(promptForDay(new Date(2026, 0, 1 + PROMPT_COUNT))).toBe(promptForDay(new Date(2026, 0, 1)));
   });
 
   it('lists seven days, today first', () => {
