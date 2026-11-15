@@ -4,6 +4,7 @@
   import { paletteFrom, glassFrom, tintTextFrom, dangerTextFrom, type Palette, type Glass } from './palette';
   import { t, setLanguage, currentLanguage } from './i18n/index.svelte';
   import { onPrefsChange } from './prefs-live';
+  import { startSnapshots } from './snapshot';
 
   // Nomie passes the colours and text size of the app. The defaults only show when the plugin is opened outside Nomie.
   let plugin: any;
@@ -43,6 +44,7 @@
       addToWidgets: true,
     });
     onPrefsChange(plugin, () => applyNomieValues());
+    startSnapshots(plugin);
   plugin.onRegistered(() => applyNomieValues());
     plugin.onWidget(() => {
       view = 'widget';
